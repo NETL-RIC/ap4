@@ -17,8 +17,8 @@ Trct_MC = cell(2,5); % template for filling in; consider preallocating space
 % Applicable for PM2.5-pri (PMP) & VOCs
 % Calibration coefficients estimated using AP4 county-level impacts
 run Tract_to_Tract_Calibration
-Trct_MC{1,3} = Tract_to_Tract{idx,1}.*Cal_PMP; % pmp
-Trct_MC{1,5} = Tract_to_Tract{idx,1}.*Cal_VOC; % voc
+Trct_MC{1,3} = read_tract_mc(idx,1).*Cal_PMP; % pmp
+Trct_MC{1,5} = read_tract_mc(idx,1).*Cal_VOC; % voc
 
 %% Tract-level SR matrix from interpolation
 % Applicable for NH3, NOx, & SO2 and PMP & VOCs for point sources
