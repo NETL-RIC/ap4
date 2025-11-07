@@ -1,6 +1,6 @@
 %% Tract-level ambient PM2.5 baseline computation
 % Model baseline pollution in every tract against which marginal emissions
-% are evaluated
+% are evaluated.
 %
 % CHANGELOG
 % - make global user-based variables start with prefix "u_" to help
@@ -8,17 +8,12 @@
 %   MATLAB function name)
 % - clear IDW_Distribution after selection is made (for memory management)
 
-% Read in input data (40 GB)
+% Read in input data (40 GB of variable memory before HDF5 implementation)
 run Load_Workspace
-
-%% Tract-level SR matrix data base template
-% Cell (holds matrices -- i.e., a matrix of matrices) to hold tract-level
-% marginal concentration matrices
-DataBase_MC = cell(3,5);
 
 %% Tract-level SR matrix interpolation
 % Applicable for NH3, NOx, & SO2 and PMP & VOCs for point sources
-% based on user-defined method and specification (62 GB)
+% First, get the chosen interpolation method and specification.
 idw = IDW_Distribution{idw_meth, idw_spec};
 run Crosswalk_County_to_Tract
 

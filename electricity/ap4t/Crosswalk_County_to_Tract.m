@@ -1,6 +1,6 @@
 %% County-to-tract interpolation
 %
-% CHANGELOG
+% CHANGELOG & NOTES
 % - swap height for size for AP4_Tract_List
 % - remove distribute (no need to create new storage)
 % - preallocate memory for DataBase_MC; reduces runtime from 6 hr to <6 min
@@ -9,12 +9,15 @@
 
 %% Tract-level matrix creation
 t = size(AP4_Tract_List, 1);
-num_b1 = size(read_cnty_mc(1,1), 1);
-num_b2 = size(read_cnty_mc(2,1), 1);
-num_b3 = size(read_cnty_mc(3,1), 1);
-num_b = [num_b1 num_b2 num_b3];
 
 % Initialize the database for holding all this data
+% NEW: replace the following initialization with HDF5 read/write
+
+% ------------------------------ OLD CODE -------------------------------------
+% num_b1 = size(read_cnty_mc(1,1), 1);
+% num_b2 = size(read_cnty_mc(2,1), 1);
+% num_b3 = size(read_cnty_mc(3,1), 1);
+% num_b = [num_b1 num_b2 num_b3];
 % [m, n] = size(DataBase_MC); #3,5
 % for a=1:m
 %    for b=1:n
@@ -22,63 +25,66 @@ num_b = [num_b1 num_b2 num_b3];
 %    endfor
 % endfor
 % clearvars m n a b num_b1 num_b2 num_b3 num_b
+% -----------------------------------------------------------------------------
 
-# create folder for intermediate files
+% NEW: Addresses issue #5
+% Create a folder for intermediate files
 intermediate_dir = 'AP4_Tract_Intermediates/';
-
-% Create folder for intermediate hdf files
-if exist(intermediate_dir) ~= 7 #7 is a directory
+if exist(intermediate_dir) ~= 7 % reminder that 7 is an existing directory
     mkdir(intermediate_dir)
 endif
 
-int_path = [intermediate_dir 'DataBase_MC.h5']
+% Create a dynamic file name because there can one for each IDW selection.
+int_base_file = 'DataBase_MC';
+int_base_ext = '.h5';
+int_dynamic = sprintf('-IDW_%d%d', idw_meth, idw_spec);
+int_path = [intermediate_dir int_base_file int_dynamic int_base_ext];
+if exist(int_path) ~= 2
+    % Create the HDF5 file and its groups and datasets
+    for i = 1:3
+        for j = 1:5
+            dataset_name = sprintf('/%d/%d', i, j);
+            if (i < 3)
+                h5create(int_path, dataset_name, [3108, 3108]);
+            else
+                h5create(int_path, dataset_name, [1859, 3108]);
+            endif
+        endfor
+    endfor
+    clearvars dataset_name i j
 
-for i = 1:3
-    for j = 1:5
-        dataset_name = sprintf('/%d/%d', i, j); 
-        if (i < 3)
-            h5create(int_path, dataset_name, [3108, 3108]);
-        else 
-            h5create(int_path, dataset_name, [1859, 3108]);
-        endif
-    end
-end
-clear dataset_name
+    % Build out the HDF5 file; this takes a long while!
+    for r = 1:t
+        % Progress bar
+        fprintf('Crosswalk: %3.3f\r', 100*r/t)
 
-for r = 1:t
-    % Progress bar
-    fprintf('Crosswalk: %3.3f\r', 100*r/t)
+        % For each tract, extract the IDW list of counties and
+        % tract-county weights:
+        counties = idw(idw(:,1) == r, 2)';
+        weights = idw(idw(:,1) == r, 3)';
 
-    % Selected counties for interpolation
-    counties = idw(idw(:,1) == r, 2)';
+        % Tract-level matrix build-out
+        %   Loop over b (ground, non-EGU point, and EGU point) and for each b,
+        %   loop over j (i.e., the five criteria pollutants) and perform the
+        %   IDW interpolation for it.
+        for b = 1:3
+            for j = 1:5
+                % notably skips ground-level PM2.5 (1,3) and VOC (1,5)
+                if b == 1 && (j == 3 || j == 5)
+                    continue;
+                endif
 
-    % Inverse distance weights
-    weights = idw(idw(:,1) == r, 3)';
+                dset = sprintf('/%d/%d', b, j);
+                dvec = sum(read_cnty_mc(b, j)(:, counties).*weights, 2);
+                dsze = size(dvec);
+                h5write(int_path, dset, dvec, [1, r], dsze);
+            endfor
+        endfor
+    endfor
 
-    % Tract-level matrix buildout
-    % notably skips ground-level PM2.5 (1,3) and ground-level VOC (1,5)
-    b = 1;
-    for j = [1,2,4]
-        dset = sprintf('/%d/%d', b, j);
-        h5write(int_path, dset,sum(read_cnty_mc(b,j)(:,counties).*weights,2), [1,r]);
-    end
+    fprintf('Crosswalk: %3.3f\n', 100*r/t);
+    clearvars counties weights b j r t dset dvec dsze
 
-    DataBase_MC{b,1}(:,r) = sum(read_cnty_mc(b,1)(:,counties).*weights,2);
-    DataBase_MC{b,2}(:,r) = sum(read_cnty_mc(b,2)(:,counties).*weights,2);
-    DataBase_MC{b,4}(:,r) = sum(read_cnty_mc(b,4)(:,counties).*weights,2);
-    b = 2;
-    DataBase_MC{b,1}(:,r) = sum(read_cnty_mc(b,1)(:,counties).*weights,2);
-    DataBase_MC{b,2}(:,r) = sum(read_cnty_mc(b,2)(:,counties).*weights,2);
-    DataBase_MC{b,3}(:,r) = sum(read_cnty_mc(b,3)(:,counties).*weights,2);
-    DataBase_MC{b,4}(:,r) = sum(read_cnty_mc(b,4)(:,counties).*weights,2);
-    DataBase_MC{b,5}(:,r) = sum(read_cnty_mc(b,5)(:,counties).*weights,2);
-    b = 3;
-    DataBase_MC{b,1}(:,r) = sum(read_cnty_mc(b,1)(:,counties).*weights,2);
-    DataBase_MC{b,2}(:,r) = sum(read_cnty_mc(b,2)(:,counties).*weights,2);
-    DataBase_MC{b,3}(:,r) = sum(read_cnty_mc(b,3)(:,counties).*weights,2);
-    DataBase_MC{b,4}(:,r) = sum(read_cnty_mc(b,5)(:,counties).*weights,2);
-endfor
-fprintf('Crosswalk: %3.3f\n', 100*r/t);
-clearvars counties weights b r t
+endif
 
 %% end of script.
