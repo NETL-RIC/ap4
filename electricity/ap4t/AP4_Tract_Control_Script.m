@@ -1,10 +1,10 @@
 % AP4_Tract_Control_Script.m
 % written by Luke Dennin, Carnegie Mellon University
-% updated for GNU Octave by Tyler Davis, NETL site support contractor
+% updated for GNU Octave by Tyler W. Davis and Rebecca Rosen, NETL SSC
 % modified for Air Quality Modeling only and memory management
 % Successfully tested running Octave 7.3.0 on macOS Monterey.
 %
-% last edited: 2025-08-13
+% last edited: 2025-11-10
 
 % Load packages
 try
@@ -54,17 +54,17 @@ to_archive = true;
 % Loads pre-defined workspace with input data and AP4 county-level outputs
 % needed for AP4_Tract. Conducts county-to-tract interpolation using
 % inverse distance weighting (the specific method can be changed).
-    % Run-Time: ~ 4 minutes
-run AP4_Tract_Initiation             % 62 GB
+    % Old Run-Time: ~ 4 minutes
+run AP4_Tract_Initiation             % 62 GB of memory (before HDF5)
 run AP4_Tract_Module_Preparation
 
 % Set user-specified county FIPS code (or codes)
 % RUN ALL FIPS
-fips = [42003 42007];
+%fips = AP4_County_List(:,2)';
 % 2023-02-25: start all FIPS
 % - Error on f=159 (FIPS=6003); mean_s failed in Tract_to_Tract_Calibration.m
-% - execution time: 9833 s
-%fips = AP4_County_List(:,2)';
+% - execution time: 9833 s (2.73 h)
+fips = [42003 42007];
 
 %% 2.A) Evaluate: Counties
 % This section runs the tract application of the AP4 model for counties.
