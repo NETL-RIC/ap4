@@ -5,7 +5,8 @@
 % - remove distribute (no need to create new storage)
 % - preallocate memory for DataBase_MC; reduces runtime from 6 hr to <6 min
 % - replace Cnty_MC cells with read_cnty_mc(i,j)
-% - [value] = read_cnty_mc(i,j) gives entire Cell, while read_cnty_mc(i,j)(1,1) provides single value
+% - [value] = read_cnty_mc(i,j) gives entire Cell, while
+%   read_cnty_mc(i,j)(1,1) provides single value
 
 %% Tract-level matrix creation
 t = size(AP4_Tract_List, 1);
@@ -18,7 +19,7 @@ t = size(AP4_Tract_List, 1);
 % num_b2 = size(read_cnty_mc(2,1), 1);
 % num_b3 = size(read_cnty_mc(3,1), 1);
 % num_b = [num_b1 num_b2 num_b3];
-% [m, n] = size(DataBase_MC); #3,5
+% [m, n] = size(DataBase_MC); # 3,5
 % for a=1:m
 %    for b=1:n
 %        DataBase_MC{a, b} = zeros(num_b(1, a), t);
@@ -44,10 +45,11 @@ if exist(int_path) ~= 2
     for i = 1:3
         for j = 1:5
             dataset_name = sprintf('/%d/%d', i, j);
+            % HOTFIX: column dim of Database_MC should be 't' [251109;TWD]
             if (i < 3)
-                h5create(int_path, dataset_name, [3108, 3108]);
+                h5create(int_path, dataset_name, [3108, t]);
             else
-                h5create(int_path, dataset_name, [1859, 3108]);
+                h5create(int_path, dataset_name, [1859, t]);
             endif
         endfor
     endfor
@@ -58,8 +60,8 @@ if exist(int_path) ~= 2
         % Progress bar
         fprintf('Crosswalk: %3.3f\r', 100*r/t)
 
-        % For each tract, extract the IDW list of counties and
-        % tract-county weights:
+        % For each tract, extract the IDW list of counties and tract-county
+        % weights:
         counties = idw(idw(:,1) == r, 2)';
         weights = idw(idw(:,1) == r, 3)';
 
@@ -74,13 +76,23 @@ if exist(int_path) ~= 2
                     continue;
                 endif
 
-                dset = sprintf('/%d/%d', b, j);
-                dvec = sum(read_cnty_mc(b, j)(:, counties).*weights, 2);
-                dsze = size(dvec);
-                h5write(int_path, dset, dvec, [1, r], dsze);
+                try
+                    dset = sprintf('/%d/%d', b, j);
+                    % TODO: test run with dvec only (skip h5write)
+                    dvec = sum(read_cnty_mc(b, j)(:, counties).*weights, 2);
+                    dsze = size(dvec);
+                    h5write(int_path, dset, dvec, [1, r], dsze);
+                catch
+                    disp(" ")
+                    disp("Failed to write to HDF5")
+                    disp(sprintf("r = %d; b = %d; j = %d", r, b, j))
+                    disp(" ")
+                end
             endfor
         endfor
     endfor
+
+    % 11/8: check to see for what b and j the MatLAB script fails on
 
     fprintf('Crosswalk: %3.3f\n', 100*r/t);
     clearvars counties weights b j r t dset dvec dsze
