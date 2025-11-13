@@ -1,4 +1,8 @@
 %% County-to-tract interpolation
+% Creates variables,
+% - t (number of tracts)
+% - intermediate_dir (AP4_Tract_Intermediates folder)
+% - dmc_file (file path to DataBase_MC HDF5)
 %
 % CHANGELOG & NOTES
 % - swap height for size for AP4_Tract_List
@@ -31,25 +35,37 @@ t = size(AP4_Tract_List, 1);
 % NEW: Addresses issue #5
 % Create a folder for intermediate files
 intermediate_dir = 'AP4_Tract_Intermediates/';
+
 if exist(intermediate_dir) ~= 7 % reminder that 7 is an existing directory
     mkdir(intermediate_dir)
 endif
 
-% Create a dynamic file name because there can one for each IDW selection.
+% Create DataBase_MC HDF5, which is used in the AP4_Tract_Setup and
+% AP4_Tract_Setup_EGUs modules. Use a dynamic file name because there is more
+% than one IDW selection.
+%   11/11/25: Created 1,2 HDF5 file in 130676 s (36.3 h) on macOS.
 int_base_file = 'DataBase_MC';
 int_base_ext = '.h5';
 int_dynamic = sprintf('-IDW_%d%d', idw_meth, idw_spec);
-int_path = [intermediate_dir int_base_file int_dynamic int_base_ext];
-if exist(int_path) ~= 2
+global dmc_file;
+dmc_file = [intermediate_dir int_base_file int_dynamic int_base_ext];
+clearvars int_base_file int_base_ext int_dynamic
+
+if exist(dmc_file) ~= 2
     % Create the HDF5 file and its groups and datasets
     for i = 1:3
         for j = 1:5
+            % HOTFIX: Skip the creation of datasets /1/3 and /1/5 [251113;TWD]
+            if (i == 1 && (j == 3 || j == 5))
+                continue;
+            endif
+
             dataset_name = sprintf('/%d/%d', i, j);
             % HOTFIX: column dim of Database_MC should be 't' [251109;TWD]
             if (i < 3)
-                h5create(int_path, dataset_name, [3108, t]);
+                h5create(dmc_file, dataset_name, [3108, t]);
             else
-                h5create(int_path, dataset_name, [1859, t]);
+                h5create(dmc_file, dataset_name, [1859, t]);
             endif
         endfor
     endfor
@@ -81,7 +97,7 @@ if exist(int_path) ~= 2
                     % TODO: test run with dvec only (skip h5write)
                     dvec = sum(read_cnty_mc(b, j)(:, counties).*weights, 2);
                     dsze = size(dvec);
-                    h5write(int_path, dset, dvec, [1, r], dsze);
+                    h5write(dmc_file, dset, dvec, [1, r], dsze);
                 catch
                     disp(" ")
                     disp("Failed to write to HDF5")
@@ -91,8 +107,6 @@ if exist(int_path) ~= 2
             endfor
         endfor
     endfor
-
-    % 11/8: check to see for what b and j the MatLAB script fails on
 
     fprintf('Crosswalk: %3.3f\n', 100*r/t);
     clearvars counties weights b j r t dset dvec dsze
