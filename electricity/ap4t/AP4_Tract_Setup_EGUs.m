@@ -23,11 +23,11 @@ endfor
 % EGU Point sources
 b = 3;
 Trct_MC_EGU = cell(1,5);
-Trct_MC_EGU{1,1} = DataBase_MC{b,1}(indices,:); % nh3
-Trct_MC_EGU{1,2} = DataBase_MC{b,2}(indices,:); % nox
-Trct_MC_EGU{1,3} = DataBase_MC{b,3}(indices,:); % pmp
-Trct_MC_EGU{1,4} = DataBase_MC{b,4}(indices,:); % so2
-Trct_MC_EGU{1,5} = DataBase_MC{b,5}(indices,:); % voc
+Trct_MC_EGU{1,1} = read_database_mc(b,1)(indices,:); % nh3
+Trct_MC_EGU{1,2} = read_database_mc(b,2)(indices,:); % nox
+Trct_MC_EGU{1,3} = read_database_mc(b,3)(indices,:); % pmp
+Trct_MC_EGU{1,4} = read_database_mc(b,4)(indices,:); % so2
+Trct_MC_EGU{1,5} = read_database_mc(b,5)(indices,:); % voc
 
 %% Initialize marginal damage matrices for storage and export
 % EGU point sources
