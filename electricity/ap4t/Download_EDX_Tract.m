@@ -1,9 +1,5 @@
-%% Read the resource IDs and resource names from CSV
-
-% The KEY VARIABLES
-% api_key = YOUR_EDX_API_KEY
-% info_dir = YOUR_DIRECTORY % location of git files..
-% file_id = fopen([info_dir, 'info_matrix.csv'], "r");
+%% Read the resource IDs and resource names from local CSV files.
+% Requests user's NETL EDX API if not defined.
 
 % NOTE: api_key is defined in AP4 Control Script as empty string
 % If the EDX files exist, this step can be safely skipped.
@@ -88,3 +84,10 @@ fclose(file_id3);
 for i = 1:rows(data3)
    download_function(data3{i,1}, api_key, data3{i,2}, info_dir3);
 end
+
+% Clean up step
+clearvars line1 line2 line3 header
+clearvars row1 row2 row3
+clearvars data1 data2 data3
+clearvars file_id1 file_id2 file_id3
+clearvars info_dir1 info_dir2 info_dir3
