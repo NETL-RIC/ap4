@@ -4,6 +4,7 @@
 % - use strcmp rather than '==' for string comparisons
 % - add clean up
 
+% Main loop over each user-selected county, f
 for f = 1:length(fips)
     fprintf(['FIPS: ' num2str(fips(f),'%05.f') '\n']);
 	run AP4_Tract_Setup

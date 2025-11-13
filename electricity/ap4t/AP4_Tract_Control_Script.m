@@ -4,7 +4,7 @@
 % modified for Air Quality Modeling only and memory management
 % Successfully tested running Octave 7.3.0 on macOS Monterey.
 %
-% last edited: 2025-11-10
+% last edited: 2025-11-12
 
 % Load packages
 try
@@ -32,7 +32,7 @@ aqm_only = true;
 % 1) Closest Counties: 1) 3 cc, 2) 5 cc, 3) 10 cc
 % 2) Counties w/in: 1) cw 30 miles, 2) cw 50 miles, 3) cw 100 miles
 % 3) Adjacent Counties: 1) ac to home county, 2) + ac to those in 1
-idw_meth = 1;
+idw_meth = 1;    % update to 3 to match best performer (Dennin et al., 2025)
 idw_spec = 2;
 % Set user-specified dose-response specification for risk assessment
 % 1. ACS = American Cancer Society Cohort: Krewski et al. (2009)
@@ -53,17 +53,20 @@ to_archive = true;
 
 % Loads pre-defined workspace with input data and AP4 county-level outputs
 % needed for AP4_Tract. Conducts county-to-tract interpolation using
-% inverse distance weighting (the specific method can be changed).
+% inverse distance weighting (the specific method can be changed), and
+% calculates county-based population totals.
     % Old Run-Time: ~ 4 minutes
 run AP4_Tract_Initiation             % 62 GB of memory (before HDF5)
 run AP4_Tract_Module_Preparation
 
 % Set user-specified county FIPS code (or codes)
-% RUN ALL FIPS
+% Used to determine the number of source tracts, T (see AP4_Tract_Setup).
+% RUN ALL COUNTY FIPS
 %fips = AP4_County_List(:,2)';
 % 2023-02-25: start all FIPS
 % - Error on f=159 (FIPS=6003); mean_s failed in Tract_to_Tract_Calibration.m
 % - execution time: 9833 s (2.73 h)
+% RUN SELECTED COUNTY FIPS
 fips = [42003 42007];
 
 %% 2.A) Evaluate: Counties
@@ -75,12 +78,10 @@ fips = [42003 42007];
 % with five files -- one for each pollutant: NH3, NOx, PMP, SO2, & VOCs.
     % Run-Time: Ranges from 20 seconds to 7.5 minutes (for LA County)
     % Most of run-time is for file exporting
-    % User Input: Single fips -- XXXXXXX; Vector [XXXXXXX YYYYYYY ...]
-% Model:
+    % User Input:
+    %    Single fips -- XXXXXXX;
+    %    Vector of fips -- [XXXXXXX YYYYYYY ...];
 run AP4_Tract_Counties
-
-% Clean up (include here to avoid crashing the all EGU run)
-clear Tract_to_Tract Cnty_MC
 
 %% 2.B) Evaluate: EGUs
 % This section runs the tract application of the AP4 model for EGUs.
@@ -93,15 +94,15 @@ clear Tract_to_Tract Cnty_MC
 
 % User Inputs (list of EGU IDs and output title)
 % EGU IDs found in AP4_EGU_List third column
-% 2023-02-26: run all EGUs
-% - execution time: 2642 s
+% RUN ALL EGUs
 %eis = AP4_EGU_List(:, 3)';
 %u_title = 'All_EGU'; % completed in 2642 s
+% 2023-02-26:
+% - execution time: 2642 s
+% RUN SELECT EGUs
 eis = 6789111;
 u_title = 'john_e_amos_plant_in_putnam_wv';
-
-% Model:
-run AP4_Tract_EGUs
+% run AP4_Tract_EGUs
 
 toc
 %% end of script.

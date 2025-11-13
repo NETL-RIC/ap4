@@ -1,4 +1,7 @@
 %% Tract-to-Tract Averaged to County-to-County
+% This module is referenced by AP4_Tract_Setup, a part of the main loop found
+% in AP4_Tract_Counties.m and performs calibration calculations for a given
+% county (idx), creating two values: Cal_PMP and Cal_VOC.
 %
 % CHANGELOG
 % - swap height for size

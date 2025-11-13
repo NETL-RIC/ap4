@@ -1,7 +1,7 @@
 %% Load AP4_Tract workspace
 % Pulls in marginal concentration matrices, inverse distance weighting
 % criteria, population & mortality rate data, dose-response information,
-% and willingness-to-pay & economic data
+% and willingness-to-pay & economic data.
 %
 % CHANGELOG
 % -  Export AP4_County_List.xlsx to CSV; remove headerline and all columns
@@ -37,9 +37,10 @@ AP4_County_List = uint16(AP4_County_List);
 AP4_EGU_List = dlmread([input_dir 'AP4_EGU_List.csv'], ',');
 AP4_EGU_List = uint32(AP4_EGU_List);
 
+% Used to determine receptor size, R
 AP4_Tract_List = dlmread([input_dir 'AP4_Tract_List.csv'], ',');
 
-% Tract-level population data by five-year age gaps
+% Tract-level population data in 19 five-year age gaps
 % (used for tract-to-county aggregation and health modeling)
 Population_Data = cell(1,1);
 Population_Data{1,1} = dlmread([input_dir 'population_2017.csv'], ' ');
