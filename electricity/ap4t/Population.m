@@ -6,9 +6,9 @@
 % - add air quality model only if-statement
 % - add clean up for iterator, r
 
-% Needed for AQM
+% Needed for AQM and Sourced_by_County
 Pop_Matrix = Population_Data{1,1};
-Pop_Total = zeros (R,1);
+Pop_Total = zeros(R,1);
 for r = 1:R
     Pop_Total(r,1) = sum(Pop_Matrix(r,:));
 endfor
