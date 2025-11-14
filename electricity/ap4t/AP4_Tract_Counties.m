@@ -6,7 +6,8 @@
 
 % Main loop over each user-selected county, f
 for f = 1:length(fips)
-    fprintf(['FIPS: ' num2str(fips(f),'%05.f') '\n']);
+    fprintf(['FIPS: ' num2str(fips(f),'%05.f') ',']);
+    tic
 	run AP4_Tract_Setup
     run AP4_Tract_Marginal_Impacts_Ground
     run AP4_Tract_Marginal_Impacts_Non_EGU_Point
@@ -14,6 +15,8 @@ for f = 1:length(fips)
         run Sourced_by_County
     endif
     run AP4_Tract_Outputs
+    cnty_time = toc;
+    printf('%.2f seconds\n', cnty_time)
 endfor
 
 %% Clean up
