@@ -6,18 +6,30 @@
 % DataBase_MC HDF5 file (as created in electricity/ap4t).
 %
 % --- 1. Configuration ---
-num_repetitions = 1000; % Number of row reads per dataset
-max_row_index = 72538;  % Maximum row index (based on HDF5 dimension)
+num_repetitions = 100; % Number of row reads per dataset
+max_row_index = 1859;  % Maximum row index (based on HDF5 dimension)
 
 % List of all populated dataset paths (skipping the empty ones: /1/3 and /1/5)
 dataset_paths = {
-    '/1/1', '/1/2', '/1/4'; ...
-    '/2/1', '/2/2', '/2/3', '/2/4', '/2/5'; ...
+    '/1/1', '/1/2', '/1/4' ...
+    '/2/1', '/2/2', '/2/3', '/2/4', '/2/5' ...
     '/3/1', '/3/2', '/3/3', '/3/4', '/3/5'
 };
 
+num_datasets = numel(dataset_paths);
+total_reads = num_repetitions * num_datasets;
+
+% Pre-allocate random indices
+all_indices = randi(max_row_index, 1, total_reads);
+
 % --- 2. Test Function ---
-function total_time = test_read_performance(filename, paths, num_reps, max_row)
+function total_time = test_read_performance(filename, paths, num_reps, all_indices)
+    % Pre-allocate result storage container
+    read_data_storage = cell(num_reps, numel(paths));
+
+    % Index for pre-generated indices
+    idx_counter = 1;
+
     % Initialize time and start timer
     tic;
 
@@ -27,16 +39,8 @@ function total_time = test_read_performance(filename, paths, num_reps, max_row)
         for i = 1:numel(paths)
             dset_name = paths{i};
 
-            % Generate a random row index for the 72538 dimension
-            % Note: Octave uses 1-based indexing
-            row_idx = randi(max_row);
-
-            % Determine the column length for the current dataset group (3108 or 1859)
-            if (i <= 8) % Corresponds to Groups 1 and 2
-                col_len = 3108;
-            else % Corresponds to Group 3
-                col_len = 1859;
-            endif
+            % Use pre-allocated index
+            row_idx = all_indices(idx_counter);
 
             % Perform the critical HDF5 read operation (accessing the Octave
             % row) [start_row, start_col], [num_rows, num_cols]
@@ -51,10 +55,13 @@ function total_time = test_read_performance(filename, paths, num_reps, max_row)
 
             % Correct Octave h5read syntax for reading a single Octave row:
             % Octave treats the matrix as (3108 ROWS, 72538 COLUMNS).
-            data_row = h5read(filename, dset_name, [row_idx, 1], [1, col_len]);
+            data_val = h5read(filename, dset_name)(row_idx, 1);
 
-            % Minimal work to ensure data is processed and not optimized out
-            sum_val = sum(data_row);
+            % Just store one value
+            read_data_storage{k, i} = data_val;
+
+            % Increment index counter
+            idx_counter = idx_counter + 1;
         endfor
     endfor
 
@@ -67,19 +74,19 @@ printf('Starting HDF5 Read Performance Tests (%d reads per dataset, 13 datasets 
 % --- File A: Original Contiguous File ---
 disp('Testing original contiguous HDF5...');
 time_contiguous = test_read_performance(
-    'DataBase_MC.h5',
+    'DataBase_MC-IDW_32.h5',
     dataset_paths,
     num_repetitions,
-    max_row_index
+    all_indices
 );
 
 % --- File B: Chunked File (No Compression) ---
 disp('Testing chunked with no compression HDF5...');
 time_chunked = test_read_performance(
-    'DataBase_MC_chunk.h5',
+    'DataBase_MC-IDW_32cu.h5',
     dataset_paths,
     num_repetitions,
-    max_row_index
+    all_indices
 );
 
 % --- 4. Report Results ---
