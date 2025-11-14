@@ -44,6 +44,7 @@ endif
 % AP4_Tract_Setup_EGUs modules. Use a dynamic file name because there is more
 % than one IDW selection.
 %   11/11/25: Created 1,2 HDF5 file in 130676 s (36.3 h) on macOS.
+%             Took ~1.5 days to create 3,2 HDF on win11.
 int_base_file = 'DataBase_MC';
 int_base_ext = '.h5';
 int_dynamic = sprintf('-IDW_%d%d', idw_meth, idw_spec);
@@ -94,7 +95,6 @@ if exist(dmc_file) ~= 2
 
                 try
                     dset = sprintf('/%d/%d', b, j);
-                    % TODO: test run with dvec only (skip h5write)
                     dvec = sum(read_cnty_mc(b, j)(:, counties).*weights, 2);
                     dsze = size(dvec);
                     h5write(dmc_file, dset, dvec, [1, r], dsze);
