@@ -16,6 +16,12 @@ echo "Starting h5repack process..."
 # Based on a few test runs, the GZIP compression is quite poor
 # (7% without SHUF; 25% with SHUF).
 h5repack --verbose --enable-error-stack --filter=SHUF --filter=GZIP=5 --layout=CHUNK=72538x1 "$INPUT_FILE" "$OUTPUT_FILE"
+# OPTIONS:
+# --verbose, prints to console
+# --enable-error-stack, provides more details error messaging
+# --filter=SHUF, add shuffle filter to each dataset for improved chunking
+# --filter=GZIP=5, add compression to each dataset
+# --layout=CHUNK=72538x1, add chunking to each dataset (size of 1 row)
 
 if [ $? -eq 0 ]; then
     echo "---"
