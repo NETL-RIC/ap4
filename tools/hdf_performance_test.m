@@ -6,7 +6,7 @@
 % DataBase_MC HDF5 file (as created in electricity/ap4t).
 %
 % --- 1. Configuration ---
-num_repetitions = 100; % Number of row reads per dataset
+num_repetitions = 10;  % How many rows to read
 max_row_index = 1859;  % Maximum row index (based on HDF5 dimension)
 
 % List of all populated dataset paths (skipping the empty ones: /1/3 and /1/5)
@@ -43,24 +43,12 @@ function total_time = test_read_performance(filename, paths, num_reps, all_indic
             row_idx = all_indices(idx_counter);
 
             % Perform the critical HDF5 read operation (accessing the Octave
-            % row) [start_row, start_col], [num_rows, num_cols]
-            % Since Octave views the data as 3108x72538, we read 1
-            % row x 72538 cols; however, the Octave h5read function expects the
-            % dimensions in the Octave order but the indexing logic must align
-            % with the Octave matrix dimensions.
-
-            % The HDF5 file is 72538x3108 in C-order.
-            % Octave presents it as 3108x72538.
-            % We need to read the row index out of the 3108 dimension.
-
-            % Correct Octave h5read syntax for reading a single Octave row:
-            % Octave treats the matrix as (3108 ROWS, 72538 COLUMNS).
+            % row). The dimensions are 3108x72538 for groups 1 & 2 and
+            % 1809x72538 for group 3. Read the first value in a random column.
             data_val = h5read(filename, dset_name)(row_idx, 1);
-
-            % Just store one value
             read_data_storage{k, i} = data_val;
 
-            % Increment index counter
+            % Increment random index counter
             idx_counter = idx_counter + 1;
         endfor
     endfor
@@ -74,7 +62,7 @@ printf('Starting HDF5 Read Performance Tests (%d reads per dataset, 13 datasets 
 % --- File A: Original Contiguous File ---
 disp('Testing original contiguous HDF5...');
 time_contiguous = test_read_performance(
-    'DataBase_MC-IDW_32.h5',
+    'DataBase_MC-IDW_12.h5',
     dataset_paths,
     num_repetitions,
     all_indices
