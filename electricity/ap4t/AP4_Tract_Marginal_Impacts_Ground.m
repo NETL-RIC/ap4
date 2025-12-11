@@ -31,7 +31,7 @@ endif
 %% Marginal impacts from ground level pri-PM2.5 emissions
 p = 3;
 for n = 1:T
-    fprintf('Ground-level PMP: %3.3f\r', 100*n/T);
+    %fprintf('Ground-level PMP: %3.3f\r', 100*n/T);
     Emission_Plus = zeros(T,1);
     Emission_Plus(n,1) = Emission_Plus(n,1) + 1;
     Delta_PM_25 = (Emission_Plus'*Trct_MC{b,p})';
@@ -43,7 +43,7 @@ for n = 1:T
         MD_Tract_Matrix(:,n) = Total_Spatial_Damage;
     endif
 endfor
-fprintf('Ground-level PMP: %3.3f\n', 100*n/T);
+%fprintf('Ground-level PMP: %3.3f\n', 100*n/T);
 
 Results_MC{b,p} = MC_Tract_Matrix;
 
@@ -66,7 +66,7 @@ endif
 %% Marginal impacts from ground level VOC emissions
 p = 5;
 for n = 1:T
-    fprintf('Ground-level VOC: %3.3f\r', 100*n/T);
+    %fprintf('Ground-level VOC: %3.3f\r', 100*n/T);
     Emission_Plus = zeros(T,1);
     Emission_Plus(n,1) = Emission_Plus(n,1) + 1;
     Delta_PM_25 = (Emission_Plus'*Trct_MC{b,p})';
@@ -78,7 +78,7 @@ for n = 1:T
         MD_Tract_Matrix(:,n) = Total_Spatial_Damage;
     endif
 endfor
-fprintf('Ground-level VOC: %3.3f\n', 100*n/T);
+%fprintf('Ground-level VOC: %3.3f\n', 100*n/T);
 
 Results_MC{b,p} = MC_Tract_Matrix;
 

@@ -5,3 +5,5 @@ cmu/ap4/*
 cmu/ap4t/*
 # Ignore the intermediate HTML files in tools
 tools/*.html
+# Ignore intermediate folders
+AP4_Tract_Intermediates

@@ -5,7 +5,7 @@
 % - append "u_" to user-selected variable
 % - move One and One Mat from Population (it's better here)
 
-%% Initiate number of receptors
+%% Initiate number of receptors (i.e., 72538)
 R = size(AP4_Tract_List, 1);
 
 %% Working matrices (for PM_25_Health)
@@ -21,9 +21,11 @@ if ~aqm_only
     run Dose_Response
     %% Willingness-to-pay (WTP) for mortality risk reductions
     run Mortality_Risk_Valuation
+
+    clearvars DR_Info
 endif
 
 %% Clean up
-clear DR_Info Population_Data
+clear Population_Data
 
 %% end of script.

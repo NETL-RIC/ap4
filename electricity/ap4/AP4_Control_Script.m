@@ -11,12 +11,20 @@ run_verbose = false;
 % Main methods
 tic
 run PM_25_Base_Concentration
+disp("base_concentration complete")
 run AP4_Setup
+disp("AP4_Setup Complete")
 run AP4_Marginal_Concentrations_Ground
+disp("AP4_Marginal_Concentrations_Ground Complete")
 run AP4_Marginal_Concentrations_Non_EGU_Point
+disp("AP4_Marginal_Concentrations_Non_EGU_Point")
 run AP4_Marginal_Concentrations_EGU_Point
+disp("AP4_Marginal_Concentrations_EGU_Point")
 run AP4_Outputs
+disp("AP4_Outputs")
 run AP4_Post_Clean_Up
+disp("AP4_Post_Clean_Up")
 toc
 
 %% end of script.
+

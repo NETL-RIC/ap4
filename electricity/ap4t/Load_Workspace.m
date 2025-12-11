@@ -1,7 +1,7 @@
 %% Load AP4_Tract workspace
-% Pulls in maringal concentration matrices, inverse distance weighting
+% Pulls in marginal concentration matrices, inverse distance weighting
 % criteria, population & mortality rate data, dose-response information,
-% and willingness-to-pay & economic data
+% and willingness-to-pay & economic data.
 %
 % CHANGELOG
 % -  Export AP4_County_List.xlsx to CSV; remove headerline and all columns
@@ -16,6 +16,8 @@
 % -  In MATLAB, wrote out the 15 matrices for Cnty_MC to HDF5 (cnty_mc.h5)
 % -  Remove the clear; it screws up a lot; consider replacing with variable
 %    specification (e.g., clear AP4_*List)
+% - Remove Load HDF
+% - Add hdf_dir as global variable
 
 % Make sure you have a copy of the input CSVs
 run Download_EDX_Tract
@@ -23,6 +25,8 @@ run Download_EDX_Tract
 % Directory names
 input_dir = 'AP4_Tract_Inputs/';
 idw_dir = [input_dir 'IDW/'];
+% makes hdf_dir global for h5read functions
+global hdf_dir
 hdf_dir = [input_dir 'HDF5/'];
 
 % Excel workbooks (as CSV files)
@@ -33,9 +37,10 @@ AP4_County_List = uint16(AP4_County_List);
 AP4_EGU_List = dlmread([input_dir 'AP4_EGU_List.csv'], ',');
 AP4_EGU_List = uint32(AP4_EGU_List);
 
+% Used to determine receptor size, R
 AP4_Tract_List = dlmread([input_dir 'AP4_Tract_List.csv'], ',');
 
-% Tract-level population data by five-year age gaps
+% Tract-level population data in 19 five-year age gaps
 % (used for tract-to-county aggregation and health modeling)
 Population_Data = cell(1,1);
 Population_Data{1,1} = dlmread([input_dir 'population_2017.csv'], ' ');
@@ -44,14 +49,21 @@ Population_Data{1,1} = dlmread([input_dir 'population_2017.csv'], ' ');
 % County-level marginal concentrations (from AP4)
 % HDF5 FILE CREATED FROM MATLAB
 % Note that i, j and the row and col numbers
-Cnty_MC = cell(3,5);
-S = load([hdf_dir 'cnty_mc.h5'], '-hdf5');
-for i=1:size(Cnty_MC, 1)
-    for j=1:size(Cnty_MC, 2)
-        Cnty_MC{i, j} = eval(['S._' num2str(i, '%i'), '._' num2str(j, '%i')]);
-    endfor
-endfor
-clearvars S i j
+% Therefore, S._1._1 is the 3108x3108 matrix for cell(1,1)
+% NOTE 1: the 'load' method reads the whole HDF5 file to memory.
+% NOTE 2: the 'load' method is commented out, and will be replaced with the
+% new h5read functions
+
+% ------------------------------ OLD CODE -------------------------------------
+% Cnty_MC = cell(3,5);
+% S = load([hdf_dir 'cnty_mc.h5'], '-hdf5');
+% for i=1:size(Cnty_MC, 1)
+%     for j=1:size(Cnty_MC, 2)
+%         Cnty_MC{i, j} = eval(['S._' num2str(i, '%i'), '._' num2str(j, '%i')]);
+%     endfor
+% endfor
+% clearvars S i j
+% -----------------------------------------------------------------------------
 
 %% Air Quality Model
 % Inverse distance weighted data files
@@ -66,7 +78,10 @@ idw_cal2 = 'idw_dist_own_and_adjacent_level_2_counties.csv';
 
 % Inverse-distance weighted interpolation matrix
 % - arguably, this should be read after the idw user selection to
-%   avoid the overhead on computer memory
+%   avoid the overhead on computer memory (note, it's only 176 MB)
+% Each cell is three-column matrix: 1) Tracts; 2) Counties; 3) IDW fraction
+%   The point is to map the IDW coefficients for each tract-county pairing
+%   (e.g., the are over 362 thousand pairings).
 IDW_Distribution = cell(3,3);
 IDW_Distribution{1,1} = dlmread([idw_dir idw_cc03], ',');
 IDW_Distribution{1,2} = dlmread([idw_dir idw_cc05], ',');
@@ -83,13 +98,18 @@ clearvars idw_cal1 idw_cal2
 % Tract-to-tract source-receptor matrix files
 % HDF5 FILE CREATED IN MATLAB
 % note: the group name is the column index
-% load time: about two minutes
-Tract_to_Tract = cell(3108, 1);
-S = load([hdf_dir 'tract_to_tract.h5'], '-hdf5');
-for i=1:size(Tract_to_Tract, 1)
-    Tract_to_Tract{i, 1} = eval(['S._' num2str(i, '%i')]);
-endfor
-clearvars S i
+% load time: about two minutes (39.2 GB)
+% NOTE: the 'load' method is commented out, and will be replaced with the
+% new h5read functions
+
+% ------------------------------ OLD CODE -------------------------------------
+% Tract_to_Tract = cell(3108, 1);
+% S = load([hdf_dir 'tract_to_tract.h5'], '-hdf5');
+% for i=1:size(Tract_to_Tract, 1)
+%     Tract_to_Tract{i, 1} = eval(['S._' num2str(i, '%i')]);
+% endfor
+% clearvars S i
+% -----------------------------------------------------------------------------
 
 % New check for Air Quality Modeling only
 if ~aqm_only

@@ -1,6 +1,8 @@
 %% EGU point source emissions
 
 %% Marginal impacts from EGU point source NH3 emissions
+% Recall that Trct_MC_EGU is a 1x5 cell, each cell represents the
+% EGU to tract interpolations (e.g., 1859x72538 matrix).
 p = 1;
 for n = 1:F
     Delta_PM_25 = Trct_MC_EGU{1,p}(n,:)';

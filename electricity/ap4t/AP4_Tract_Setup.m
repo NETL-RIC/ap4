@@ -1,5 +1,9 @@
 %% Tract-level SR matrix
-% Marginal concentration for input county
+% This module is a part of the main loop found in AP4_Tract_Counties.m
+% Computes marginal concentration for a given input county, fips(f).
+% Creates variables:
+% - idx, the county index for current county, fips(f).
+% - T, number of sources (tracts within the current county)
 %
 % CHANGELOG
 % - New search for index w/o table
@@ -8,32 +12,37 @@
 % - add air quality model only if-statement
 % - WARNING: protected function, index, overwritten; consider renaming, fips_id
 %   fixed [25.05.08; TWD]
-% - TODO: Preallocate memorty to Trct_MC
+% - TODO: Preallocate memory to Trct_MC
 
+% Pull the index of the user-defined county (not the same as f).
 idx = AP4_County_List(AP4_County_List(:,2) == fips(f), 1);
-Trct_MC = cell(2,5); % template for filling in; consider preallocating space
+
+% Template for filling in; consider preallocating space.
+Trct_MC = cell(2,5);
 
 %% Tract-to-tract SR matrix pull
 % Applicable for PM2.5-pri (PMP) & VOCs
 % Calibration coefficients estimated using AP4 county-level impacts
 run Tract_to_Tract_Calibration
-Trct_MC{1,3} = Tract_to_Tract{idx,1}.*Cal_PMP; % pmp
-Trct_MC{1,5} = Tract_to_Tract{idx,1}.*Cal_VOC; % voc
+Trct_MC{1,3} = read_tract_mc(idx).*Cal_PMP; % pmp
+Trct_MC{1,5} = read_tract_mc(idx).*Cal_VOC; % voc
 
-%% Tract-level SR matrix from interpolation
+%% Tract-level SR matrix from interpolation (72,538x1 array).
 % Applicable for NH3, NOx, & SO2 and PMP & VOCs for point sources
+
 % Ground-level
 b = 1;
-Trct_MC{b,1} = DataBase_MC{b,1}(idx,:); % nh3
-Trct_MC{b,2} = DataBase_MC{b,2}(idx,:); % nox
-Trct_MC{b,4} = DataBase_MC{b,4}(idx,:); % so2
+Trct_MC{b,1} = read_database_mc(b,1)(idx,:); % nh3
+Trct_MC{b,2} = read_database_mc(b,2)(idx,:); % nox
+Trct_MC{b,4} = read_database_mc(b,4)(idx,:); % so2
+
 % Point sources
 b = 2;
-Trct_MC{b,1} = DataBase_MC{b,1}(idx,:); % nh3
-Trct_MC{b,2} = DataBase_MC{b,2}(idx,:); % nox
-Trct_MC{b,3} = DataBase_MC{b,3}(idx,:); % pmp
-Trct_MC{b,4} = DataBase_MC{b,4}(idx,:); % so2
-Trct_MC{b,5} = DataBase_MC{b,5}(idx,:); % voc
+Trct_MC{b,1} = read_database_mc(b,1)(idx,:); % nh3
+Trct_MC{b,2} = read_database_mc(b,2)(idx,:); % nox
+Trct_MC{b,3} = read_database_mc(b,3)(idx,:); % pmp
+Trct_MC{b,4} = read_database_mc(b,4)(idx,:); % so2
+Trct_MC{b,5} = read_database_mc(b,5)(idx,:); % voc
 
 %% Initialize source dimensions
 % T = sources (i.e., tracts w/in specified county)
